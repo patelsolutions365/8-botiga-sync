@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build Botiga Sync API",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/BotigaSync.API/BotigaSync.API.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
