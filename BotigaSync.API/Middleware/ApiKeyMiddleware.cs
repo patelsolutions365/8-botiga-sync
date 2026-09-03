@@ -6,11 +6,7 @@ namespace BotigaSync.API.Middleware;
 public class ApiKeyMiddleware(RequestDelegate next, IConfiguration config)
 {
     public async Task InvokeAsync(HttpContext context)
-    { 
-        
-        await next(context);
-
-
+    {
         if (!context.Request.Path.StartsWithSegments("/api/sync"))
         {
             await next(context);

@@ -18,6 +18,5 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseMiddleware<ApiKeyMiddleware>();
 app.MapControllers();
 app.Run();

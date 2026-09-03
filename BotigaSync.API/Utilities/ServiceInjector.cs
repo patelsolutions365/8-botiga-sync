@@ -8,6 +8,7 @@ public static class ServiceInjector
     public static IServiceCollection ConfigureAppServices(this IServiceCollection services)
     {
         services.AddScoped<ISyncEventService, SyncEventService>();
+        services.AddScoped<IOutboxEventService, OutboxEventService>();
         services.AddSingleton<ISyncEventValidator, SaleSyncEventValidator>();
         return services;
     }
