@@ -28,11 +28,23 @@ public static class LocalToCloudEntityRegistry
         Add("ShiftEvent", "Shift", "ShiftTrack", "EmployeeClockinOut", "EmployeeBreak");
         Add("CashDrawerEvent", "CashDrawerLog", "TerminalCashLog");
         Add("StockAdjusted", "InventoryHistory");
-        Add("PurchaseOrderReceived", "PurchaseOrder", "PurchaseOrderDetail", "PolineItem", "Vendor", "VendorContact");
+        // Vendor/VendorContact are Cloud -> Local only now - vendors are managed
+        // centrally, not per-store, so a local edit should never push back up.
+        Add("PurchaseOrderReceived", "PurchaseOrder", "PurchaseOrderDetail", "PolineItem");
         Add("Terminal", "Terminal");
         Add("Product", "Product");
         Add("CashMovement", "CashMovement");
         Add("LoginHistory", "LoginHistory");
+        // Cash paid out to a vendor from the till - recorded at the store.
+        Add("VendorPayout", "VendorPayout");
+        // Printer hardware is set up on-site at the store, not pushed down from a
+        // central admin dashboard.
+        Add("PrinterSetup", "FriendlyPrinterSetup", "PrinterSetup", "PrinterType");
+        // Employee identity/role/permissions are managed at the store - mirrored off
+        // ApplicationUser/ApplicationRole+AspNetRoleClaims (see UserManagementRepository,
+        // PermissionRepository in 1-botiga-api-instore). AspNetUsers/AspNetRoles/
+        // AspNetRoleClaims themselves never sync.
+        Add("EmployeeManagement", "Employee", "EmployeeRole", "EmployeePermission");
 
         return entities;
 

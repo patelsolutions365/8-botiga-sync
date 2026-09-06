@@ -52,6 +52,7 @@ public sealed class SyncEventService(
                     .Select(reference => reference.ForeignKey)
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
                 var entity = await FindAsync(type.ClrType, record.GlobalId, cancellationToken);
+                var isNew = entity == null;
 
                 if (record.Operation.Equals("Deleted", StringComparison.OrdinalIgnoreCase))
                 {
@@ -60,6 +61,29 @@ public sealed class SyncEventService(
                 }
                 entity ??= Activator.CreateInstance(type.ClrType) ?? throw new InvalidOperationException($"Cannot create {record.EntityType}.");
                 if (master.Entry(entity).State == EntityState.Detached) master.Add(entity);
+
+                // Most synced entities have a database-generated primary key on this
+                // side (cloud assigns its own identity value; GlobalId is what
+                // correlates the row back to the originating store, not the PK).
+                // A few (e.g. Employee - see its EmployeeId) are deliberately NOT
+                // database-generated, so the same key matches the originating
+                // store's own value. For those, the PK has to be copied from
+                // record.LocalId explicitly on insert - otherwise it's skipped below
+                // (PK properties are never taken from Data) and every new row would
+                // land at the CLR default (0), colliding with the next one.
+                if (isNew)
+                {
+                    var newEntityPrimaryKey = type.FindPrimaryKey();
+                    if (newEntityPrimaryKey?.Properties.Count == 1
+                        && newEntityPrimaryKey.Properties[0].ValueGenerated == ValueGenerated.Never
+                        && record.LocalId.HasValue)
+                    {
+                        var pkProperty = newEntityPrimaryKey.Properties[0];
+                        var pkValue = Convert.ChangeType(record.LocalId.Value, Nullable.GetUnderlyingType(pkProperty.ClrType) ?? pkProperty.ClrType);
+                        Set(master.Entry(entity), pkProperty.Name, pkValue);
+                    }
+                }
+
                 Set(master.Entry(entity), "GlobalId", record.GlobalId);
                 SetIfExists(master.Entry(entity), "StoreId", envelope.StoreId);
                 SetIfExists(master.Entry(entity), "LocalId", record.LocalId);

@@ -65,11 +65,11 @@ public partial class MasterBotigaDataContext(DbContextOptions<MasterBotigaDataCo
 
     public virtual DbSet<EmployeeClockinOut> EmployeeClockinOut { get; set; }
 
-    public virtual DbSet<EmployeeLoginMethod> EmployeeLoginMethod { get; set; }
-
     public virtual DbSet<EmployeeNotes> EmployeeNotes { get; set; }
 
     public virtual DbSet<EmployeePermission> EmployeePermission { get; set; }
+
+    public virtual DbSet<EmployeeRole> EmployeeRole { get; set; }
 
     public virtual DbSet<EmployeeShiftSchedule> EmployeeShiftSchedule { get; set; }
 
@@ -639,23 +639,14 @@ public partial class MasterBotigaDataContext(DbContextOptions<MasterBotigaDataCo
 
         modelBuilder.Entity<Employee>(entity =>
         {
-            entity.HasIndex(e => e.GlobalId, "Employee_GlobalId_key").IsUnique();
+            entity.HasKey(e => e.EmployeeId);
 
-            entity.HasIndex(e => new { e.StoreId, e.LocalId }, "Employee_StoreId_LocalId_key").IsUnique();
-
-            entity.Property(e => e.City).HasMaxLength(50);
-            entity.Property(e => e.Country).HasMaxLength(50);
+            entity.Property(e => e.EmployeeId).ValueGeneratedNever();
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-            entity.Property(e => e.DateOfJoining).HasColumnType("datetime");
-            entity.Property(e => e.DateOfRegistration).HasColumnType("datetime");
-            entity.Property(e => e.EmployeeCode).HasMaxLength(10);
             entity.Property(e => e.FirstName).HasMaxLength(500);
             entity.Property(e => e.GlobalId).HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.LastName).HasMaxLength(500);
             entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
-            entity.Property(e => e.Phone1).HasMaxLength(20);
-            entity.Property(e => e.Phone2).HasMaxLength(20);
-            entity.Property(e => e.State).HasMaxLength(50);
         });
 
         modelBuilder.Entity<EmployeeBreak>(entity =>
@@ -691,17 +682,6 @@ public partial class MasterBotigaDataContext(DbContextOptions<MasterBotigaDataCo
             entity.Property(e => e.Wage).HasColumnType("decimal(18, 4)");
         });
 
-        modelBuilder.Entity<EmployeeLoginMethod>(entity =>
-        {
-            entity.HasIndex(e => e.GlobalId, "EmployeeLoginMethod_GlobalId_key").IsUnique();
-
-            entity.HasIndex(e => new { e.StoreId, e.LocalId }, "EmployeeLoginMethod_StoreId_LocalId_key").IsUnique();
-
-            entity.Property(e => e.GlobalId).HasDefaultValueSql("(newsequentialid())");
-            entity.Property(e => e.LoginMethodType).HasMaxLength(100);
-            entity.Property(e => e.PasswordOrCardData).HasMaxLength(100);
-        });
-
         modelBuilder.Entity<EmployeeNotes>(entity =>
         {
             entity.HasKey(e => e.EmployeeNoteId);
@@ -718,16 +698,23 @@ public partial class MasterBotigaDataContext(DbContextOptions<MasterBotigaDataCo
 
         modelBuilder.Entity<EmployeePermission>(entity =>
         {
-            entity.HasIndex(e => e.GlobalId, "EmployeePermission_GlobalId_key").IsUnique();
-
-            entity.HasIndex(e => new { e.StoreId, e.LocalId }, "EmployeePermission_StoreId_LocalId_key").IsUnique();
-
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.GlobalId).HasDefaultValueSql("(newsequentialid())");
-            entity.Property(e => e.IsDelete).HasColumnName("Is_Delete");
-            entity.Property(e => e.IsRead).HasColumnName("Is_Read");
-            entity.Property(e => e.IsWrite).HasColumnName("Is_Write");
+            entity.Property(e => e.Module).HasMaxLength(100);
+            entity.Property(e => e.PermissionKey).HasMaxLength(100);
+            entity.Property(e => e.PermissionValue).HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<EmployeeRole>(entity =>
+        {
+            entity.HasKey(e => e.RoleId);
+
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.DefaultOvertimeWage).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.DefaultWage).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.GlobalId).HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            entity.Property(e => e.RoleName).HasMaxLength(256);
         });
 
         modelBuilder.Entity<EmployeeShiftSchedule>(entity =>
