@@ -71,14 +71,19 @@ public sealed class SyncEventService(
                 // record.LocalId explicitly on insert - otherwise it's skipped below
                 // (PK properties are never taken from Data) and every new row would
                 // land at the CLR default (0), colliding with the next one.
+                // Employee's key is composite (StoreId, EmployeeId) - EmployeeId
+                // alone is only unique within one store, so StoreId has to be part
+                // of the key too. StoreId is set separately below (from
+                // envelope.StoreId), so only the OTHER non-generated key property
+                // (EmployeeId) needs copying from LocalId here.
                 if (isNew)
                 {
                     var newEntityPrimaryKey = type.FindPrimaryKey();
-                    if (newEntityPrimaryKey?.Properties.Count == 1
-                        && newEntityPrimaryKey.Properties[0].ValueGenerated == ValueGenerated.Never
-                        && record.LocalId.HasValue)
+                    var pkProperty = newEntityPrimaryKey?.Properties.FirstOrDefault(p =>
+                        p.ValueGenerated == ValueGenerated.Never
+                        && !p.Name.Equals("StoreId", StringComparison.OrdinalIgnoreCase));
+                    if (pkProperty != null && record.LocalId.HasValue)
                     {
-                        var pkProperty = newEntityPrimaryKey.Properties[0];
                         var pkValue = Convert.ChangeType(record.LocalId.Value, Nullable.GetUnderlyingType(pkProperty.ClrType) ?? pkProperty.ClrType);
                         Set(master.Entry(entity), pkProperty.Name, pkValue);
                     }

@@ -639,7 +639,12 @@ public partial class MasterBotigaDataContext(DbContextOptions<MasterBotigaDataCo
 
         modelBuilder.Entity<Employee>(entity =>
         {
-            entity.HasKey(e => e.EmployeeId);
+            // Composite key - EmployeeId alone is only unique within one store
+            // (every store numbers its own employees starting from 1); this
+            // shared, multi-tenant table needs StoreId as part of the key too,
+            // matching the actual composite PK_Employee on this database.
+            entity.Property(e => e.StoreId).IsRequired();
+            entity.HasKey(e => new { e.StoreId, e.EmployeeId });
 
             entity.Property(e => e.EmployeeId).ValueGeneratedNever();
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
