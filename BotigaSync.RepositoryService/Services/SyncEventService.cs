@@ -60,24 +60,43 @@ public sealed class SyncEventService(
                     continue;
                 }
                 entity ??= Activator.CreateInstance(type.ClrType) ?? throw new InvalidOperationException($"Cannot create {record.EntityType}.");
-                if (master.Entry(entity).State == EntityState.Detached) master.Add(entity);
 
-                // Most synced entities have a database-generated primary key on this
-                // side (cloud assigns its own identity value; GlobalId is what
-                // correlates the row back to the originating store, not the PK).
-                // A few (e.g. Employee - see its EmployeeId) are deliberately NOT
-                // database-generated, so the same key matches the originating
-                // store's own value. For those, the PK has to be copied from
-                // record.LocalId explicitly on insert - otherwise it's skipped below
-                // (PK properties are never taken from Data) and every new row would
-                // land at the CLR default (0), colliding with the next one.
-                // Employee's key is composite (StoreId, EmployeeId) - EmployeeId
-                // alone is only unique within one store, so StoreId has to be part
-                // of the key too. StoreId is set separately below (from
-                // envelope.StoreId), so only the OTHER non-generated key property
-                // (EmployeeId) needs copying from LocalId here.
+                // GlobalId/StoreId/LocalId (and the PK-copy below) only ever need
+                // setting once, at creation - they identify where a row came from,
+                // and that never changes for the life of a synced row. Re-setting
+                // them on every update is harmless for entities where these are
+                // plain columns, but for Employee, StoreId is HALF OF THE PRIMARY
+                // KEY - EF refuses to touch a key property on an already-tracked
+                // entity at all, even to reassign the same value ("is part of a key
+                // and so cannot be modified"), so this must be skipped entirely on
+                // update, not just for inserts.
                 if (isNew)
                 {
+                    // Set before Add() - for entities whose primary key is entirely
+                    // client-generated (every key property is ValueGenerated.Never,
+                    // e.g. Employee's composite StoreId+EmployeeId), EF needs the
+                    // full key populated the instant tracking begins. Setting it via
+                    // Entry(...).Property(...) first is safe - the entry stays
+                    // Detached (no key validation) until Add() actually transitions
+                    // its state.
+                    Set(master.Entry(entity), "GlobalId", record.GlobalId);
+                    SetIfExists(master.Entry(entity), "StoreId", envelope.StoreId);
+                    SetIfExists(master.Entry(entity), "LocalId", record.LocalId);
+
+                    // Most synced entities have a database-generated primary key on
+                    // this side (cloud assigns its own identity value; GlobalId is
+                    // what correlates the row back to the originating store, not the
+                    // PK). A few (e.g. Employee - see its EmployeeId) are
+                    // deliberately NOT database-generated, so the same key matches
+                    // the originating store's own value. For those, the PK has to be
+                    // copied from record.LocalId explicitly on insert - otherwise
+                    // it's skipped below (PK properties are never taken from Data)
+                    // and every new row would land at the CLR default (0), colliding
+                    // with the next one. Employee's key is composite (StoreId,
+                    // EmployeeId) - EmployeeId alone is only unique within one store,
+                    // so StoreId (set above) is part of the key too; only the OTHER
+                    // non-generated key property (EmployeeId) needs copying from
+                    // LocalId here.
                     var newEntityPrimaryKey = type.FindPrimaryKey();
                     var pkProperty = newEntityPrimaryKey?.Properties.FirstOrDefault(p =>
                         p.ValueGenerated == ValueGenerated.Never
@@ -89,9 +108,8 @@ public sealed class SyncEventService(
                     }
                 }
 
-                Set(master.Entry(entity), "GlobalId", record.GlobalId);
-                SetIfExists(master.Entry(entity), "StoreId", envelope.StoreId);
-                SetIfExists(master.Entry(entity), "LocalId", record.LocalId);
+                if (master.Entry(entity).State == EntityState.Detached) master.Add(entity);
+
                 foreach (var item in record.Data)
                 {
                     var property = FindProperty(type, item.Key);
@@ -106,8 +124,18 @@ public sealed class SyncEventService(
                     var principalType = ResolveReferenceType(reference.PrincipalType);
                     var principal = await FindAsync(principalType.ClrType, reference.GlobalId!.Value, cancellationToken) ?? throw new InvalidOperationException($"Missing {reference.PrincipalType} for {reference.ForeignKey}.");
                     var key = principalType.FindPrimaryKey();
-                    if (key?.Properties.Count != 1 || reference.ForeignKey.Contains(',')) throw new InvalidOperationException($"Unsupported reference {reference.ForeignKey}.");
-                    Set(master.Entry(entity), reference.ForeignKey, master.Entry(principal).Property(key.Properties[0].Name).CurrentValue);
+                    // Normally the principal has a single-column key, so there's only
+                    // one value to copy onto the child's FK column. Employee is the
+                    // one exception (composite StoreId+EmployeeId) - for it, pick the
+                    // specific key column matching the FK's name (EmployeeId) rather
+                    // than the whole key; the child's StoreId is already set
+                    // separately (from envelope.StoreId), so only the EmployeeId half
+                    // needs copying here.
+                    var keyProperty = key?.Properties.Count == 1
+                        ? key.Properties[0]
+                        : key?.Properties.FirstOrDefault(p => p.Name.Equals(reference.ForeignKey, StringComparison.OrdinalIgnoreCase));
+                    if (keyProperty == null || reference.ForeignKey.Contains(',')) throw new InvalidOperationException($"Unsupported reference {reference.ForeignKey}.");
+                    Set(master.Entry(entity), reference.ForeignKey, master.Entry(principal).Property(keyProperty.Name).CurrentValue);
                 }
                 await master.SaveChangesAsync(cancellationToken);
                 master.SyncInboxes.Add(new SyncInbox

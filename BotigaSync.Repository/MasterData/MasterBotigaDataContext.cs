@@ -649,8 +649,13 @@ public partial class MasterBotigaDataContext(DbContextOptions<MasterBotigaDataCo
             entity.Property(e => e.EmployeeId).ValueGeneratedNever();
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.FirstName).HasMaxLength(500);
-            entity.Property(e => e.GlobalId).HasDefaultValueSql("(newsequentialid())");
+            entity.Property(e => e.MiddleName).HasMaxLength(500);
             entity.Property(e => e.LastName).HasMaxLength(500);
+            entity.Property(e => e.DisplayName).HasMaxLength(500);
+            entity.Property(e => e.CurrentCash).HasColumnType("decimal(18, 4)");
+            entity.Property(e => e.IsBreakTimeInclude).HasColumnType("bit");
+            entity.Property(e => e.DateOfBirth).HasColumnType("date");
+            entity.Property(e => e.GlobalId).HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
         });
 
