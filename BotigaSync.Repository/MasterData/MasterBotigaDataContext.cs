@@ -2189,6 +2189,10 @@ public partial class MasterBotigaDataContext(DbContextOptions<MasterBotigaDataCo
             entity.Property(e => e.StockLevelsOnTs).HasColumnName("StockLevelsOnTS");
             entity.Property(e => e.TerminalName).HasMaxLength(200);
             entity.Property(e => e.TerminalRole).HasMaxLength(50);
+            entity.Property(e => e.CloudTerminalIp).HasMaxLength(45);
+            entity.Property(e => e.SerialNumber).HasMaxLength(100);
+            entity.Property(e => e.AgentVersion).HasMaxLength(50);
+            entity.Property(e => e.LastSeenAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<TerminalCashLogs>(entity =>

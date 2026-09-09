@@ -45,6 +45,12 @@ public static class LocalToCloudEntityRegistry
         // PermissionRepository in 1-botiga-api-instore). AspNetUsers/AspNetRoles/
         // AspNetRoleClaims themselves never sync.
         Add("EmployeeManagement", "Employee", "EmployeeRole", "EmployeePermission");
+        // Customer loyalty enrollment happens at the store.
+        Add("LoyaltyProgramEnrollment", "CustomerLoyaltyProgram");
+        // Abandoned/removed cart lines - audit trail, happens at the store terminal.
+        Add("CartItemDeleted", "DeletedCartItem");
+        // Defective-item swap at the register - tied to a store, terminal, cashier.
+        Add("ProductExchange", "ProductExchange");
 
         return entities;
 

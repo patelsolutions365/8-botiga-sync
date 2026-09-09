@@ -133,5 +133,19 @@ public partial class Terminal
 
     public Guid GlobalId { get; set; }
 
+    public bool? IsCloudEnabled { get; set; }
+
+    public string? CloudTerminalIp { get; set; }
+
+    public int? CloudTerminalPort { get; set; }
+
+    public string? SerialNumber { get; set; }
+
+    public DateTime? LastSeenAt { get; set; }
+
+    public bool? TerminalReachable { get; set; }
+
+    public string? AgentVersion { get; set; }
+
     public virtual ICollection<VendorPayout> VendorPayout { get; set; } = new List<VendorPayout>();
 }
