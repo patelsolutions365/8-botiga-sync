@@ -52,6 +52,27 @@ public static class LocalToCloudEntityRegistry
         // Defective-item swap at the register - tied to a store, terminal, cashier.
         Add("ProductExchange", "ProductExchange");
 
+        // Onboarding-only - these tables are normally Cloud->Local in steady-state (product/
+        // catalog/vendor/store-config data is managed centrally, not at the store), so this is
+        // NOT reversing that. Local's own outbound allow-list (LocalToCloudSyncTypes in
+        // 1-botiga-api-instore's BotigaPOSDataContext) does not include any of these, so nothing
+        // in normal day-to-day local operation ever generates an outbox event for them - the
+        // only thing that pushes them Local->Cloud is 9-botiga-backfill's one-time onboarding
+        // tool, seeding cloud with an existing store's current data before cloud becomes the
+        // source of truth for it going forward, same as for a brand-new store. Added 2026-09-10
+        // after the backfill tool hit "not approved for Local-to-Cloud sync" on all of these.
+        Add("OnboardingBackfillOnly",
+            "Category", "Department", "Group", "GroupCategory", "TaxRate",
+            "Vendor", "VendorContact",
+            "ProductSku", "ProductVendor", "ProductIngredient", "ProductOnSaleInfo", "ProductTax",
+            "GroupProduct", "MixNmatch", "MixNmatchLevel", "MixNMatchProduct",
+            "ProductCoupon", "ProductCouponRule", "HotButton", "FavouriteProduct", "ChoiceItem",
+            "Location", "TouchScreenSetup", "ReceiptSetup", "Property", "PropertyDetail",
+            "CompanyInformation", "ReasonCode", "PoleImage", "PaymentType",
+            "Order", "OrderAction", "OrderDetail", "StoreDayEndDate", "StockVarianceLog",
+            "LotteryRules", "LotteryDeliveries", "LotteryGame", "LotteryGameTicketPrice",
+            "LotteryActivations", "LotteryDailySale", "LotteryGameSuffix", "LotteryShift", "LotteryReturns");
+
         return entities;
 
         void Add(string category, params string[] entityTypes)
