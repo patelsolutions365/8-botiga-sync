@@ -5,7 +5,7 @@ namespace BotigaSync.Entity.Entities;
 
 public partial class MixNmatch
 {
-    public int MixNmatchId { get; set; }
+    public int MixNMatchId { get; set; }
 
     public int? StoreId { get; set; }
 

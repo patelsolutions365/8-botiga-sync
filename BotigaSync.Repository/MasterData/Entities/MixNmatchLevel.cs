@@ -7,7 +7,7 @@ public partial class MixNmatchLevel
 {
     public int MixNmatchLevelId { get; set; }
 
-    public int? MixNmatchId { get; set; }
+    public int? MixNMatchId { get; set; }
 
     public int? StoreId { get; set; }
 

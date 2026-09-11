@@ -9,7 +9,7 @@ public partial class MixNmatchProducts
 
     public int? StoreId { get; set; }
 
-    public int? MixNmatchId { get; set; }
+    public int? MixNMatchId { get; set; }
 
     public int? ProductId { get; set; }
 

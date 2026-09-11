@@ -1367,7 +1367,7 @@ public partial class MasterBotigaDataContext(DbContextOptions<MasterBotigaDataCo
 
             entity.HasIndex(e => new { e.StoreId, e.LocalId }, "MixNMatch_StoreId_LocalId_key").IsUnique();
 
-            entity.Property(e => e.MixNmatchId).HasColumnName("MixNMatchId");
+            entity.Property(e => e.MixNMatchId).HasColumnName("MixNMatchId");
             entity.Property(e => e.AmountToDiscount).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.CustomerLimit).HasColumnType("decimal(18, 4)");
@@ -1392,7 +1392,7 @@ public partial class MasterBotigaDataContext(DbContextOptions<MasterBotigaDataCo
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 4)");
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
             entity.Property(e => e.GlobalId).HasDefaultValueSql("(newsequentialid())");
-            entity.Property(e => e.MixNmatchId).HasColumnName("MixNMatchId");
+            entity.Property(e => e.MixNMatchId).HasColumnName("MixNMatchId");
             entity.Property(e => e.Qty).HasColumnType("decimal(18, 4)");
         });
 
@@ -1408,7 +1408,7 @@ public partial class MasterBotigaDataContext(DbContextOptions<MasterBotigaDataCo
 
             entity.Property(e => e.MixNmatchProductId).HasColumnName("MixNMatchProductId");
             entity.Property(e => e.GlobalId).HasDefaultValueSql("(newsequentialid())");
-            entity.Property(e => e.MixNmatchId).HasColumnName("MixNMatchId");
+            entity.Property(e => e.MixNMatchId).HasColumnName("MixNMatchId");
         });
 
         modelBuilder.Entity<MoneyActivity>(entity =>

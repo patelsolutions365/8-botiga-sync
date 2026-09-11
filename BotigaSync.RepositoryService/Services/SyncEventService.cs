@@ -251,6 +251,23 @@ public sealed class SyncEventService(
             candidate.GetColumnName().Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static void Set(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry, string name, object? value) { if (entry.Metadata.FindProperty(name) == null) throw new InvalidOperationException($"Unknown property {name}."); entry.Property(name).CurrentValue = value; }
-    private static void SetIfExists(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry, string name, object? value) { if (value != null && entry.Metadata.FindProperty(name) != null) entry.Property(name).CurrentValue = value; }
+    // Case-insensitive, via the FindProperty helper above - local and the relay maintain their
+    // entity models independently (Code-First here, Database-First there), so the same physical
+    // column can end up spelled differently on each side (e.g. local's MixNMatchProduct.MixNMatchId
+    // vs the relay's MixNmatchProducts.MixNmatchId) - confirmed 2026-09-11 when this caused every
+    // MixNMatchProduct row to fail with "Unknown property MixNMatchId".
+    private static void Set(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry, string name, object? value)
+    {
+        var property = FindProperty(entry.Metadata, name) ?? throw new InvalidOperationException($"Unknown property {name}.");
+        entry.Property(property.Name).CurrentValue = value;
+    }
+
+    private static void SetIfExists(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry, string name, object? value)
+    {
+        var property = FindProperty(entry.Metadata, name);
+        if (value != null && property != null)
+        {
+            entry.Property(property.Name).CurrentValue = value;
+        }
+    }
 }
