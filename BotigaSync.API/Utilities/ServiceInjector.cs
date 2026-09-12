@@ -10,6 +10,7 @@ public static class ServiceInjector
         services.AddScoped<ISyncEventService, SyncEventService>();
         services.AddScoped<IOutboxEventService, OutboxEventService>();
         services.AddSingleton<ISyncEventValidator, SaleSyncEventValidator>();
+        services.AddScoped<IBulkStagingService, BulkStagingService>();
         return services;
     }
 }
