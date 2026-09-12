@@ -7,9 +7,9 @@ public partial class VendorPayout
 {
     public int VendorPayoutId { get; set; }
 
-    public int VendorId { get; set; }
+    public int? VendorId { get; set; }
 
-    public int PaymentTypeId { get; set; }
+    public int? PaymentTypeId { get; set; }
 
     public decimal? Amount { get; set; }
 

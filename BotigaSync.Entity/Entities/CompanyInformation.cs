@@ -9,7 +9,7 @@ public partial class CompanyInformation
 
     public string? CompanyName { get; set; }
 
-    public string? StoreId { get; set; }
+    public int? StoreId { get; set; }
 
     public string? Website { get; set; }
 
