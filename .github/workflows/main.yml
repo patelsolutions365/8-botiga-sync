@@ -1,0 +1,64 @@
+name: Deploy to DEV
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Setup .NET 6
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+
+      # Step 3: Build & Publish Application
+      - name: Build and Publish Application
+        run: |
+          dotnet restore
+          dotnet publish --configuration Release -o out
+
+      # Step 4: Verify Build Output
+      - name: Verify Build Output
+        run: ls -l out
+
+      # Step 5: Clean Destination Folder (no sudo needed)
+      - name: Clean Destination Folder
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_PRIVATE_KEY }}
+          script: |
+            rm -rf /var/www/html/dev/8-botiga-sync/*
+            echo "Cleaned deployment directory"
+
+      # Step 6: Deploy Files (NO /out folder issue)
+      - name: Deploy Files
+        uses: appleboy/scp-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_PRIVATE_KEY }}
+          source: "out/"
+          target: "/var/www/html/dev/8-botiga-sync"
+          strip_components: 1
+
+      # Step 7: Restart Service
+      - name: Restart Service
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_PRIVATE_KEY }}
+          script: |
+            sudo systemctl restart botiga-dev-sync.service
+            sudo systemctl status botiga-dev-sync.service
